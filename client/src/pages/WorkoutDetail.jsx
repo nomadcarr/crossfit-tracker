@@ -3,11 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { getWorkout, getAthletes, addWorkoutResult, deleteWorkoutResult } from '../api';
 import Modal from '../components/Modal';
 import { getScoreValue, formatScore, scorePlaceholder, scoreLabel } from '../utils/score';
+import { useAuth } from '../context/AuthContext';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function WorkoutDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [workout, setWorkout] = useState(null);
   const [allAthletes, setAllAthletes] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
@@ -25,8 +27,10 @@ export default function WorkoutDetail() {
     ? allAthletes.filter(a => !workout.results.find(r => r.athlete_id === a.id))
     : [];
 
+  const myResult = workout?.results.find(r => r.athlete_id === user?.athlete_id);
+
   const openAdd = () => {
-    setForm({ athlete_id: '', score: '', rx: true, notes: '' });
+    setForm({ athlete_id: user?.athlete_id ? String(user.athlete_id) : '', score: '', rx: true, notes: '' });
     setErr('');
     setShowAdd(true);
   };
@@ -71,7 +75,13 @@ export default function WorkoutDetail() {
             </div>
           )}
         </div>
-        <button className="btn btn-red" onClick={openAdd}>+ Добави резултат</button>
+        {user ? (
+          <button className="btn btn-red" onClick={openAdd}>
+            {myResult ? '✏️ Промени резултата' : '+ Добави резултат'}
+          </button>
+        ) : (
+          <Link to="/login" className="btn btn-ghost btn-sm">Влез за да добавиш резултат</Link>
+        )}
       </div>
 
       <div className="card">
@@ -136,27 +146,23 @@ export default function WorkoutDetail() {
           {err && <div className="err">{err}</div>}
 
           <div className="fg">
-            <label>Атлет *</label>
-            {athletesWithoutResult.length === 0 ? (
-              <div style={{ color: 'var(--muted)', fontSize: '0.88rem', padding: '10px 0' }}>
-                Всички атлети вече имат резултат за тази тренировка.
-                Избери атлет отдолу за да промениш резултата му.
+            <label>Атлет</label>
+            {user?.athlete_id ? (
+              <div style={{ padding: '10px 13px', background: 'var(--hover)', borderRadius: 8, fontWeight: 700, border: '1px solid var(--border)' }}>
+                {user.display_name}
               </div>
-            ) : null}
-            <select className="inp" value={form.athlete_id}
-              onChange={e => setForm(f => ({ ...f, athlete_id: e.target.value }))}>
-              <option value="">— избери —</option>
-              {athletesWithoutResult.length > 0 && (
-                <optgroup label="Без резултат">
-                  {athletesWithoutResult.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </optgroup>
-              )}
-              {workout.results.length > 0 && (
-                <optgroup label="Промени резултат">
-                  {workout.results.map(r => <option key={r.athlete_id} value={r.athlete_id}>{r.athlete_name}</option>)}
-                </optgroup>
-              )}
-            </select>
+            ) : (
+              <select className="inp" value={form.athlete_id}
+                onChange={e => setForm(f => ({ ...f, athlete_id: e.target.value }))}>
+                <option value="">— избери —</option>
+                {athletesWithoutResult.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                {workout.results.length > 0 && (
+                  <optgroup label="Промени резултат">
+                    {workout.results.map(r => <option key={r.athlete_id} value={r.athlete_id}>{r.athlete_name}</option>)}
+                  </optgroup>
+                )}
+              </select>
+            )}
           </div>
 
           <div className="row">

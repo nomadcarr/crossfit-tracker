@@ -58,6 +58,26 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nickname TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    athlete_id INTEGER UNIQUE REFERENCES athletes(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+`);
+
 const liftCount = db.prepare('SELECT COUNT(*) as count FROM lifts').get();
 if (liftCount.count === 0) {
   const insertLift = db.prepare('INSERT OR IGNORE INTO lifts (name, category) VALUES (?, ?)');

@@ -1,13 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { optionalAuth } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use(optionalAuth);
 
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/athletes', require('./routes/athletes'));
 app.use('/api/workouts', require('./routes/workouts'));
 app.use('/api/lifts', require('./routes/lifts'));
