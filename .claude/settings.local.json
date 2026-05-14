@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"d:\\\\crossfit\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"d:\\\\crossfit\"\\)\\) { Write-Host \"Directory is empty or does not exist\" })",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(node -e \"const {DatabaseSync} = require\\('node:sqlite'\\); const db = new DatabaseSync\\(':memory:'\\); console.log\\('node:sqlite OK'\\)\")",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "d:\\crossfit\\server"
+    ]
+  }
+}
