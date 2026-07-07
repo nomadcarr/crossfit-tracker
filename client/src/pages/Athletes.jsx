@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAthletes, createAthlete, updateAthlete, deleteAthlete } from '../api';
 import Modal from '../components/Modal';
+import { useAuth } from '../context/AuthContext';
 
 export default function Athletes() {
+  const { user } = useAuth();
   const [athletes, setAthletes] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -92,10 +94,12 @@ export default function Athletes() {
                     {new Date(a.created_at).toLocaleDateString('bg-BG')}
                   </td>
                   <td>
-                    <div className="flex" style={{ justifyContent: 'flex-end' }}>
-                      <button className="btn btn-ghost btn-xs" onClick={() => openEdit(a)}>Редактирай</button>
-                      <button className="btn btn-danger btn-xs" onClick={() => remove(a)}>Изтрий</button>
-                    </div>
+                    {user?.athlete_id === a.id && (
+                      <div className="flex" style={{ justifyContent: 'flex-end' }}>
+                        <button className="btn btn-ghost btn-xs" onClick={() => openEdit(a)}>Редактирай</button>
+                        <button className="btn btn-danger btn-xs" onClick={() => remove(a)}>Изтрий</button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

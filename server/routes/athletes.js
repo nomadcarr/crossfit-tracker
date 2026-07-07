@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { requireOwnAthlete } = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   const athletes = db.prepare(`
@@ -65,7 +66,7 @@ router.post('/', (req, res) => {
   }
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', requireOwnAthlete('id'), (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Името е задължително' });
   try {
@@ -77,12 +78,12 @@ router.put('/:id', (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireOwnAthlete('id'), (req, res) => {
   db.prepare('DELETE FROM athletes WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-router.post('/:id/records', (req, res) => {
+router.post('/:id/records', requireOwnAthlete('id'), (req, res) => {
   const { lift_id, weight_kg, date, notes } = req.body;
   if (!lift_id || !weight_kg || !date)
     return res.status(400).json({ error: 'lift_id, weight_kg и date са задължителни' });
@@ -101,7 +102,7 @@ router.post('/:id/records', (req, res) => {
   res.status(201).json(record);
 });
 
-router.delete('/:athleteId/records/:recordId', (req, res) => {
+router.delete('/:athleteId/records/:recordId', requireOwnAthlete('athleteId'), (req, res) => {
   db.prepare('DELETE FROM personal_records WHERE id = ? AND athlete_id = ?')
     .run(req.params.recordId, req.params.athleteId);
   res.json({ success: true });

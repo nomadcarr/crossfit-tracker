@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { requireAuth } = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   const workouts = db.prepare(`
@@ -60,9 +61,11 @@ router.delete('/:id', (req, res) => {
   res.json({ success: true });
 });
 
-router.post('/:id/results', (req, res) => {
+router.post('/:id/results', requireAuth, (req, res) => {
   const { athlete_id, score, score_value, rx, notes } = req.body;
   if (!athlete_id || !score) return res.status(400).json({ error: 'athlete_id и score са задължителни' });
+  if (String(athlete_id) !== String(req.user.athlete_id))
+    return res.status(403).json({ error: 'Можеш да добавяш резултати само за себе си' });
 
   try {
     db.prepare(`
@@ -85,9 +88,14 @@ router.post('/:id/results', (req, res) => {
   }
 });
 
-router.delete('/:workoutId/results/:resultId', (req, res) => {
-  db.prepare('DELETE FROM workout_results WHERE id = ? AND workout_id = ?')
-    .run(req.params.resultId, req.params.workoutId);
+router.delete('/:workoutId/results/:resultId', requireAuth, (req, res) => {
+  const result = db.prepare('SELECT * FROM workout_results WHERE id = ? AND workout_id = ?')
+    .get(req.params.resultId, req.params.workoutId);
+  if (!result) return res.status(404).json({ error: 'Резултатът не е намерен' });
+  if (String(result.athlete_id) !== String(req.user.athlete_id))
+    return res.status(403).json({ error: 'Можеш да триеш само свои резултати' });
+
+  db.prepare('DELETE FROM workout_results WHERE id = ?').run(req.params.resultId);
   res.json({ success: true });
 });
 

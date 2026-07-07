@@ -107,7 +107,7 @@ export default function WorkoutDetail() {
                 <th>{scoreLabel(workout.score_type)}</th>
                 <th>Ниво</th>
                 <th>Бележки</th>
-                <th></th>
+                {user && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -126,9 +126,13 @@ export default function WorkoutDetail() {
                   </td>
                   <td>{r.rx ? <span className="rx">RX</span> : <span className="scaled">Scaled</span>}</td>
                   <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{r.notes || '—'}</td>
-                  <td>
-                    <button className="btn btn-danger btn-xs" onClick={() => removeResult(r.id)}>✕</button>
-                  </td>
+                  {user && (
+                    <td>
+                      {r.athlete_id === user.athlete_id && (
+                        <button className="btn btn-danger btn-xs" onClick={() => removeResult(r.id)}>✕</button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

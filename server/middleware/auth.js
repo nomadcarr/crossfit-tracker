@@ -22,4 +22,13 @@ const requireAuth = (req, res, next) => {
   });
 };
 
-module.exports = { optionalAuth, requireAuth };
+const requireOwnAthlete = (paramName) => (req, res, next) => {
+  requireAuth(req, res, () => {
+    if (String(req.user.athlete_id) !== String(req.params[paramName])) {
+      return res.status(403).json({ error: 'Можеш да редактираш само своите данни' });
+    }
+    next();
+  });
+};
+
+module.exports = { optionalAuth, requireAuth, requireOwnAthlete };

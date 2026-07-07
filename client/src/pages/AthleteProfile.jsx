@@ -3,12 +3,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getAthlete, getLifts, addAthleteRecord, deleteAthleteRecord, deleteAthlete } from '../api';
 import Modal from '../components/Modal';
 import { formatScore } from '../utils/score';
+import { useAuth } from '../context/AuthContext';
 
 const CATS = { Olympic: '🏋️ Олимпийски', Squat: '🦵 Клек', Powerlifting: '💪 Powerlifting', Press: '⬆️ Преси', Other: '➕ Друго' };
 
 export default function AthleteProfile() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { user } = useAuth();
+  const isOwner = user?.athlete_id === Number(id);
   const [athlete, setAthlete] = useState(null);
   const [lifts, setLifts] = useState([]);
   const [tab, setTab] = useState('prs');
@@ -72,7 +75,7 @@ export default function AthleteProfile() {
             <span>🏆 {athlete.pr_count} рекорда</span>
           </div>
         </div>
-        <button className="btn btn-danger btn-sm" onClick={removeAthlete}>Изтрий атлет</button>
+        {isOwner && <button className="btn btn-danger btn-sm" onClick={removeAthlete}>Изтрий атлет</button>}
       </div>
 
       <div className="tabs">
@@ -83,9 +86,11 @@ export default function AthleteProfile() {
 
       {tab === 'prs' && (
         <>
-          <div className="mb16">
-            <button className="btn btn-red" onClick={() => { setShowAdd(true); setErr(''); }}>+ Добави резултат</button>
-          </div>
+          {isOwner && (
+            <div className="mb16">
+              <button className="btn btn-red" onClick={() => { setShowAdd(true); setErr(''); }}>+ Добави резултат</button>
+            </div>
+          )}
           {Object.keys(CATS).map(cat => {
             const prs = prsByCategory[cat];
             if (!prs?.length) return null;
@@ -124,7 +129,7 @@ export default function AthleteProfile() {
             <div className="empty"><div className="empty-icon">📋</div><p>Няма история</p></div>
           ) : (
             <table className="tbl">
-              <thead><tr><th>Упражнение</th><th>Тегло</th><th>Дата</th><th>Бележки</th><th></th></tr></thead>
+              <thead><tr><th>Упражнение</th><th>Тегло</th><th>Дата</th><th>Бележки</th>{isOwner && <th></th>}</tr></thead>
               <tbody>
                 {athlete.prHistory.map(r => (
                   <tr key={r.id}>
@@ -132,9 +137,11 @@ export default function AthleteProfile() {
                     <td className="pr-val">{r.weight_kg} кг</td>
                     <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{new Date(r.date).toLocaleDateString('bg-BG')}</td>
                     <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{r.notes || '—'}</td>
-                    <td>
-                      <button className="btn btn-danger btn-xs" onClick={() => removePR(r.id)}>✕</button>
-                    </td>
+                    {isOwner && (
+                      <td>
+                        <button className="btn btn-danger btn-xs" onClick={() => removePR(r.id)}>✕</button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
