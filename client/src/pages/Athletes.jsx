@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAthletes, createAthlete, updateAthlete, deleteAthlete } from '../api';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 import { useAuth } from '../context/AuthContext';
 
 export default function Athletes() {
@@ -84,7 +85,8 @@ export default function Athletes() {
               {athletes.map(a => (
                 <tr key={a.id}>
                   <td>
-                    <Link to={`/athletes/${a.id}`} style={{ color: 'var(--text)', fontWeight: 700, fontSize: '1rem' }}>
+                    <Link to={`/athletes/${a.id}`} className="flex" style={{ color: 'var(--text)', fontWeight: 700, fontSize: '1rem', gap: 10 }}>
+                      <Avatar name={a.name} url={a.avatar_url} size={32} />
                       {a.name}
                     </Link>
                   </td>

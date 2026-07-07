@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getAthlete, getLifts, addAthleteRecord, deleteAthleteRecord, deleteAthlete } from '../api';
+import { getAthlete, getLifts, addAthleteRecord, deleteAthleteRecord, deleteAthlete, updateAthleteAvatar } from '../api';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 import { formatScore } from '../utils/score';
 import { useAuth } from '../context/AuthContext';
+import { fileToResizedDataUrl } from '../utils/image';
 
 const CATS = { Olympic: '🏋️ Олимпийски', Squat: '🦵 Клек', Powerlifting: '💪 Powerlifting', Press: '⬆️ Преси', Other: '➕ Друго' };
 
@@ -53,6 +55,17 @@ export default function AthleteProfile() {
     nav('/athletes');
   };
 
+  const uploadAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const dataUrl = await fileToResizedDataUrl(file);
+      await updateAthleteAvatar(id, dataUrl);
+      load();
+    } catch (e) { setErr(e.message); }
+  };
+
   if (!athlete) return <div className="loading">Зарежда...</div>;
 
   const prsByCategory = athlete.currentPRs.reduce((acc, pr) => {
@@ -65,14 +78,25 @@ export default function AthleteProfile() {
   return (
     <div className="page">
       <div className="ph">
-        <div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: 4 }}>
-            <Link to="/athletes">← Атлети</Link>
+        <div className="flex" style={{ gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Avatar name={athlete.name} url={athlete.avatar_url} size={64} />
+            {isOwner && (
+              <label className="avatar-edit" title="Смени снимката">
+                📷
+                <input type="file" accept="image/*" onChange={uploadAvatar} style={{ display: 'none' }} />
+              </label>
+            )}
           </div>
-          <h1>{athlete.name}</h1>
-          <div className="flex" style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.85rem', gap: 16 }}>
-            <span>🏋️ {athlete.workout_count} тренировки</span>
-            <span>🏆 {athlete.pr_count} рекорда</span>
+          <div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: 4 }}>
+              <Link to="/athletes">← Атлети</Link>
+            </div>
+            <h1>{athlete.name}</h1>
+            <div className="flex" style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.85rem', gap: 16 }}>
+              <span>🏋️ {athlete.workout_count} тренировки</span>
+              <span>🏆 {athlete.pr_count} рекорда</span>
+            </div>
           </div>
         </div>
         {isOwner && <button className="btn btn-danger btn-sm" onClick={removeAthlete}>Изтрий атлет</button>}

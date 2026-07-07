@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAthlete, getLifts, addAthleteRecord, deleteAthleteRecord } from '../api';
+import { getAthlete, getLifts, addAthleteRecord, deleteAthleteRecord, updateAthleteAvatar } from '../api';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 import { formatScore } from '../utils/score';
+import { fileToResizedDataUrl } from '../utils/image';
 
 const CATS = { Olympic: '🏋️ Олимпийски', Squat: '🦵 Клек', Powerlifting: '💪 Powerlifting', Press: '⬆️ Преси', Other: '➕ Друго' };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -50,6 +52,17 @@ export default function MyDashboard() {
     nav('/');
   };
 
+  const uploadAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const dataUrl = await fileToResizedDataUrl(file);
+      await updateAthleteAvatar(user.athlete_id, dataUrl);
+      load();
+    } catch (e) { setErr(e.message); }
+  };
+
   if (!athlete) return <div className="loading">Зарежда...</div>;
 
   const prsByCategory = athlete.currentPRs.reduce((acc, pr) => {
@@ -62,9 +75,18 @@ export default function MyDashboard() {
   return (
     <div className="page">
       <div className="ph">
-        <div>
-          <h1>👤 {user.display_name}</h1>
-          <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: 4 }}>@{user.nickname}</div>
+        <div className="flex" style={{ gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Avatar name={user.display_name} url={athlete.avatar_url} size={64} />
+            <label className="avatar-edit" title="Смени снимката">
+              📷
+              <input type="file" accept="image/*" onChange={uploadAvatar} style={{ display: 'none' }} />
+            </label>
+          </div>
+          <div>
+            <h1>{user.display_name}</h1>
+            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: 4 }}>@{user.nickname}</div>
+          </div>
         </div>
         <button className="btn btn-danger btn-sm" onClick={handleLogout}>Изход</button>
       </div>

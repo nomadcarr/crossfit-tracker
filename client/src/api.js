@@ -17,6 +17,8 @@ export const getAthlete = (id) => get(`/api/athletes/${id}`);
 export const createAthlete = (d) => post('/api/athletes', d);
 export const updateAthlete = (id, d) => put(`/api/athletes/${id}`, d);
 export const deleteAthlete = (id) => del(`/api/athletes/${id}`);
+export const updateAthleteAvatar = (id, avatar_url) => put(`/api/athletes/${id}/avatar`, { avatar_url });
+export const deleteAthleteAvatar = (id) => del(`/api/athletes/${id}/avatar`);
 export const addAthleteRecord = (aid, d) => post(`/api/athletes/${aid}/records`, d);
 export const deleteAthleteRecord = (aid, rid) => del(`/api/athletes/${aid}/records/${rid}`);
 

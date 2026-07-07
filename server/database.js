@@ -11,6 +11,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS athletes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
+    avatar_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -77,6 +78,10 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 `);
+
+try {
+  db.exec(`ALTER TABLE athletes ADD COLUMN avatar_url TEXT`);
+} catch {}
 
 const liftCount = db.prepare('SELECT COUNT(*) as count FROM lifts').get();
 if (liftCount.count === 0) {

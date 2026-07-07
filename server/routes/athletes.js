@@ -83,6 +83,23 @@ router.delete('/:id', requireOwnAthlete('id'), (req, res) => {
   res.json({ success: true });
 });
 
+router.put('/:id/avatar', requireOwnAthlete('id'), (req, res) => {
+  const { avatar_url } = req.body;
+  if (!avatar_url || !/^data:image\/(png|jpe?g|webp|gif);base64,/.test(avatar_url)) {
+    return res.status(400).json({ error: 'Невалиден формат на снимката' });
+  }
+  if (avatar_url.length > 3.5 * 1024 * 1024) {
+    return res.status(400).json({ error: 'Снимката е твърде голяма' });
+  }
+  db.prepare('UPDATE athletes SET avatar_url = ? WHERE id = ?').run(avatar_url, req.params.id);
+  res.json(db.prepare('SELECT * FROM athletes WHERE id = ?').get(req.params.id));
+});
+
+router.delete('/:id/avatar', requireOwnAthlete('id'), (req, res) => {
+  db.prepare('UPDATE athletes SET avatar_url = NULL WHERE id = ?').run(req.params.id);
+  res.json(db.prepare('SELECT * FROM athletes WHERE id = ?').get(req.params.id));
+});
+
 router.post('/:id/records', requireOwnAthlete('id'), (req, res) => {
   const { lift_id, weight_kg, date, notes } = req.body;
   if (!lift_id || !weight_kg || !date)
