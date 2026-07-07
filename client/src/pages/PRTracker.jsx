@@ -63,7 +63,7 @@ export default function PRTracker() {
         <button className="btn btn-red" onClick={() => { setShowAddLift(true); setErr(''); }}>+ Ново упражнение</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16 }}>
+      <div className="pr-layout">
         {/* Sidebar */}
         <div>
           {Object.keys(CATS).map(cat => {
