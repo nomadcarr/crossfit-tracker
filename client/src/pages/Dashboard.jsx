@@ -18,22 +18,22 @@ export default function Dashboard() {
       <div className="ph"><h1>Dashboard</h1></div>
 
       <div className="g4 mb16">
-        <div className="card stat">
+        <Link to="/athletes" className="card stat stat-link">
           <div className="stat-num">{stats.athletes}</div>
           <div className="stat-lbl">Атлети</div>
-        </div>
-        <div className="card stat">
+        </Link>
+        <Link to="/workouts" className="card stat stat-link">
           <div className="stat-num">{stats.workouts}</div>
           <div className="stat-lbl">Тренировки</div>
-        </div>
-        <div className="card stat">
+        </Link>
+        <Link to="/workouts" className="card stat stat-link">
           <div className="stat-num">{stats.results}</div>
           <div className="stat-lbl">Резултати</div>
-        </div>
-        <div className="card stat">
+        </Link>
+        <Link to="/prs" className="card stat stat-link">
           <div className="stat-num">{stats.prs}</div>
           <div className="stat-lbl">Лични рекорди</div>
-        </div>
+        </Link>
       </div>
 
       <div className="g2">
