@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getLifts, getLiftLeaderboard, createLift, deleteLift } from '../api';
+import { getLifts, getLiftLeaderboard, createLift, deleteLift, addAthleteRecord } from '../api';
 import Modal from '../components/Modal';
+import { useAuth } from '../context/AuthContext';
 
 const CATS = { Olympic: '🏋️ Олимпийски', Squat: '🦵 Клек', Powerlifting: '💪 Powerlifting', Press: '⬆️ Преси', Other: '➕ Друго' };
 const MEDALS = ['🥇', '🥈', '🥉'];
+const today = () => new Date().toISOString().slice(0, 10);
 
 export default function PRTracker() {
+  const { user } = useAuth();
   const [lifts, setLifts] = useState([]);
   const [selected, setSelected] = useState(null);
   const [board, setBoard] = useState(null);
   const [showAddLift, setShowAddLift] = useState(false);
   const [newLift, setNewLift] = useState({ name: '', category: 'Olympic' });
+  const [showAddResult, setShowAddResult] = useState(false);
+  const [resultForm, setResultForm] = useState({ weight_kg: '', date: today(), notes: '' });
   const [err, setErr] = useState('');
+  const [resultErr, setResultErr] = useState('');
 
   const loadLifts = () => getLifts().then(l => {
     setLifts(l);
@@ -47,6 +53,21 @@ export default function PRTracker() {
       setSelected(null);
       setBoard(null);
     } catch (e) { alert(e.message); }
+  };
+
+  const openAddResult = () => {
+    setResultForm({ weight_kg: '', date: today(), notes: '' });
+    setResultErr('');
+    setShowAddResult(true);
+  };
+
+  const submitResult = async () => {
+    if (!resultForm.weight_kg || !resultForm.date) { setResultErr('Попълни тегло и дата'); return; }
+    try {
+      await addAthleteRecord(user.athlete_id, { ...resultForm, lift_id: selected.id, weight_kg: parseFloat(resultForm.weight_kg) });
+      setShowAddResult(false);
+      getLiftLeaderboard(selected.id).then(setBoard);
+    } catch (e) { setResultErr(e.message); }
   };
 
   const liftsByCategory = lifts.reduce((acc, l) => {
@@ -112,6 +133,11 @@ export default function PRTracker() {
                   <span className="tag">{CATS[board.lift.category] || board.lift.category}</span>
                 </div>
                 <div className="spacer" />
+                {user ? (
+                  <button className="btn btn-red btn-sm" onClick={openAddResult}>+ Добави резултат</button>
+                ) : (
+                  <Link to="/login" className="btn btn-ghost btn-sm">Влез за да добавиш резултат</Link>
+                )}
                 <button className="btn btn-danger btn-sm" onClick={() => removeLift(board.lift)}>Изтрий</button>
               </div>
 
@@ -120,7 +146,7 @@ export default function PRTracker() {
                   <div className="empty-icon">🏆</div>
                   <p>Няма резултати за това упражнение</p>
                   <p style={{ fontSize: '0.85rem', marginTop: 6 }}>
-                    Добавяй резултати от профила на атлета
+                    {user ? 'Добави първия резултат по-горе' : 'Влез за да добавиш резултат'}
                   </p>
                 </div>
               ) : (
@@ -177,6 +203,36 @@ export default function PRTracker() {
             <select className="inp" value={newLift.category} onChange={e => setNewLift(f => ({ ...f, category: e.target.value }))}>
               {Object.entries(CATS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
+          </div>
+        </Modal>
+      )}
+
+      {showAddResult && selected && (
+        <Modal title={`Добави резултат — ${selected.name}`} onClose={() => setShowAddResult(false)} footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => setShowAddResult(false)}>Откажи</button>
+            <button className="btn btn-red" onClick={submitResult}>Запази</button>
+          </>
+        }>
+          {resultErr && <div className="err">{resultErr}</div>}
+          <div className="row">
+            <div className="fg">
+              <label>Тегло (кг) *</label>
+              <input className="inp" type="number" step="0.5" min="0" value={resultForm.weight_kg}
+                onChange={e => setResultForm(f => ({ ...f, weight_kg: e.target.value }))}
+                onKeyDown={e => e.key === 'Enter' && submitResult()}
+                placeholder="100" autoFocus />
+            </div>
+            <div className="fg">
+              <label>Дата *</label>
+              <input className="inp" type="date" value={resultForm.date}
+                onChange={e => setResultForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+          </div>
+          <div className="fg">
+            <label>Бележки</label>
+            <textarea className="inp" value={resultForm.notes}
+              onChange={e => setResultForm(f => ({ ...f, notes: e.target.value }))} placeholder="Необязателно..." />
           </div>
         </Modal>
       )}
